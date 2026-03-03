@@ -1,0 +1,13 @@
+插入排序
+for(int i = 0; i < 4; i++) {  // 只需要n-1轮
+    int min_index = i;
+    for(int j = i + 1; j < 5; j++) {
+        if(arr[j] < arr[min_index]) {
+            min_index = j;  // 只记录索引，不记录值
+        }
+    }
+    // 交换
+    int temp = arr[i];
+    arr[i] = arr[min_index];
+    arr[min_index] = temp;
+}
