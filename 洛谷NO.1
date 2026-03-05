@@ -1,0 +1,96 @@
+NO.1 一道插入排序练习
+题目：给出班里某门课程的成绩单，请你按成绩从高到低对成绩单排序输出，如果有相同分数则名字字典序小的在前。
+输入格式
+第一行为 n(0<n<20)，表示班里的学生数目；
+接下来的 n 行，每行为每个学生的名字和他的成绩, 中间用单个空格隔开。名字只包含字母且长度不超过 20，成绩为一个不大于 100 的非负整数。
+输出格式
+把成绩单按分数从高到低的顺序进行排序并输出，每行包含名字和分数两项，之间有一个空格。
+
+代码实现：
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>    //需要运用strcmp函数进行字典序的比较
+
+//第一部分：创建结构体，包括姓名，成绩，结构体指针
+typedef struct studentGrade {
+    char name[21];
+    int score;
+    struct studentGrade* next;
+}SG;  //在开头使用typedef,并在结尾}处加上别名，记得加；分号
+
+#define LEN sizeof(struct studentGrade)  //宏定义：用来代替创建结构体的大小，不需要加分号
+
+//编写结构体排序函数，注意由于对结构体进行改动，应返回改动后新的头指针，类型为SG*
+SG* insert_sort(SG* head) {
+     //一、一级分类讨论：1.若链表为空 2.链表只有一个元素————这些都不用排序
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+    //二、一级分类讨论：1.链表正常，不止一个元素
+    SG* sort=NULL;//为已排序序列的头指针
+    SG* current=head;//为抽出的那张牌（在本代码实现中current一直是在有序序列后一张被抽来的牌）
+    while (current!= NULL) {
+        SG* temp = current->next;//~~~~~即让temp暂时保存一下current下一个节点的地址，方便断开后再抽牌
+        //接下来是二级分类讨论：抽出牌需要直接被提到序列首端的情况1.有序序列还为0 2.抽出牌是现有有序序列中最大的 3.与最大相等但字典序小
+        if (sort == NULL || current->score > sort->score ||( current->score == sort->score && strcmp(current->name, sort->name) <0)) {
+            current->next = sort;//直接把抽出牌当作head
+            sort = current;
+        }
+        //二级分类讨论：抽出牌需要被插入中间的情况，即普通情况
+        else {
+            SG* sign = sort;   //sign作为在有序数列内部遍历的一次性光标
+            // 修正：当 sign->next 比 current 更“靠前”（score 更大 或 score 相同且名字字典序更小）时继续前进
+            while (sign->next != NULL && (sign->next->score > current->score || (sign->next->score == current->score && strcmp(sign->next->name, current->name) < 0))) {
+                sign = sign->next;
+            }
+            current->next = sign->next;
+            sign->next = current;
+        }current = temp;//之前暂存在temp里标记的current->next变成了新的current,作为下一轮的抽出牌
+    }return sort;//sort才是有序序列的头指针
+}
+
+//创造链表函数
+SG* creat(int n) {
+    SG* node, * head = NULL, * tail = NULL;//只在循环构建外声明头中尾指针
+    for (int i = 0; i < n; i++) {
+        node = (SG*)malloc(LEN);    //1.先分配
+        scanf("%s %d", node->name, &node->score);//2.再录入数据
+        node->next = NULL;  ？？？？意义详见下方心得，但在录入数据后连接新节点前把node->next=NULL这是一个必要的良好习惯！
+        if (head == NULL) {
+            head = node;
+            tail = node;
+        }
+        else {                 //3.再连接新节点
+            tail->next = node;
+            tail = node;
+        }
+    }return head;
+}
+//打印列表函数
+void printlist(SG* head) {
+    SG* p = head;
+    while (p!= NULL) {
+        printf("%s %d\n", p->name, p->score);
+            p= p->next;
+    }
+}
+int main() {
+    int n;
+    scanf("%d", &n);
+    SG* head = creat(n);
+    head = insert_sort(head);
+    printlist(head);
+    return 0;
+}
+代码心得：
+1、最重要：第一次知道了插排中改变并插入节点对原断开位置的处理可以用暂记SG*temp=current->next来暂时保存，很棒！
+          在这个排序下不需要机械的再找到current的前后驱，只要暂时保存下一个节点的位置用于后来的抽取就行。
+2. 最重要： 在考虑比较时注意边界情况，并且建立一二级分类讨论思想，列出来，列在纸上，并且要绞尽脑汁考虑完所有情况。
+3. 关于node->next = NULL
+    1.	意义
+      •	node->next = NULL; 把新分配节点的 next 指针明确设为“空”（链表尾的标志）。这样遍历链表时可以判断到达末尾并停止。
+    2.	为什么放在那个位置（读入数据后，插入前）
+      •	在你当前的流程中，先分配内存、再读入数据、再把节点接到链表末尾。把 next 先置为 NULL 能保证无论是否是第一个节点，或者后续如何接入，新增节点的 next 都是一个确定的、合法的值（空），不会成为野指针。
+    3.	如果不写会发生什么
+      •	malloc 返回的内存未初始化，node->next 可能含有任意值（垃圾），当你把这个节点作为链表最后一个节点时，之后遍历链表会跟着这个垃圾指针继续访问未定义内存，可能打印出乱码、出现控制字符、运行时崩溃或判题为 Wrong Answer / Runtime Error。  
