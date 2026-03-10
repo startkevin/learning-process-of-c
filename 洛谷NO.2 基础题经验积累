@@ -13,3 +13,5 @@
 	auto len=a.size();//读取长度                                       printf("%c.%c%c%c", d, c, b, a);}
 	for(int i=len-1;i>=0;i--)//反转，倒序输出                       （法二直接依据简单形式进行构造，非常巧妙）
 	cout<<a[i];
+6.我们在使用cout<<setprecision(n)<<a;时，n通常指的是总的有效位数，要加上fixed才能表示精确到小数点后n位。
+  形如eg.  cout<<setprecision(n)<<fixed<<a;
