@@ -121,4 +121,4 @@ int findPeakElement(int arr[],int n){  //n为该数组元素个数
                   }
                    return ans;
 }
-
+！！！！（具体思路题解请参照算法笔记单子版）
