@@ -1,0 +1,126 @@
+C++编程题：
+
+邮件地址检验：邮件地址需要满足格式“x@y.z”，其中，x、y、z 的长度均不超过 20 个字符，且只能由字母、数字和下划线构成，但是 z 可以包含 2 个点号。
+编写一个邮件地址检验程序，验证用户输入的邮件地址是否满足以上格式。如果不满足，显示一个信息，告诉用户为什么不满足。
+
+
+
+代码实现：
+#include<iostream>
+#include<string>
+using namespace std;
+
+//检查字符串是否只包含字母、数字、下划线
+bool isValidChar(char c) {
+	return (c >= 'a' && c <= 'z' )||( c > 'A' && c < 'Z' )||(c>'0' && c < '9') ||( c == '_');
+    //特别注意：在这里圈定a-z这种范围内部用的是&&！并且这里0-9是字符！
+}
+//检查字符串是否合法有效
+bool isvalidseg(const string& seg) {//const明确告诉编译器这个函数不会修改传入的字符串参数，&表示传递的是字符串的引用，这样可以避免不必要的字符串复制，提高效率
+	if (seg.length() > 20) {
+		return false;
+	}
+	for (char c : seg) {//char c : seg一种for循环语法，表示逐一对于字符串seg中的每个字符c，执行循环体内的代码
+		if (!isValidChar(c)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+int main() {
+	cout << "请输入邮箱地址";
+	string email;
+	getline(cin, email);
+	//step1:找到@的位置
+
+	size_t at_pos = email.find('@');//at_pos是一个size_t类型的变量，表示@在字符串中的位置，如果没有找到@，则返回string::npos
+	//没有找到@
+	if (at_pos == string::npos) {
+		cout << "无效的邮箱地址" << endl;
+		return 1;//如果没有找到@，则输出无效的邮箱地址，并返回1表示程序异常结束
+	}
+	//@在字符串首端
+	if (at_pos == 0) {//注意：字符串的索引从0开始，如果@在字符串的第一个位置，即索引为0，则说明邮箱地址无效
+		cout << "无效的邮箱地址" << endl;
+		return 1;
+	}
+	//@在字符串末端
+	if (at_pos == email.length() - 1) {//如果@在字符串的最后一个位置，即索引为email.length() - 1，则说明邮箱地址无效
+		cout << "无效的邮箱地址" << endl;
+		return 1;
+	}
+
+	//step2:分割x和剩下的部分rest
+	string x = email.substr(0, at_pos);//x是邮箱地址中@之前的部分，使用substr函数从字符串的起始位置提取到@的位置
+	string rest = email.substr(at_pos + 1);//如果省略第二个参数，substr函数会提取从指定位置到字符串末尾的所有字符，因此rest是邮箱地址中@之后的部分
+
+
+	//step3:检查x是否有效
+	if (!isvalidseg(x)) {
+		if (x.length() > 20) {//注意这里检查的应该是x序列的长度是否超过20，而不是email!!!
+			cout << "错误：x部分超出20长度" << endl;
+		}
+		else {
+			cout << "错误：x部分含有非法字符" << endl;
+		}
+		return 1;
+	}
+
+	//step4:检查剩下的部分rest中是否包含y.z形式
+	size_t dot_pos = rest.find('.');
+	//首先检查.点号位置是否正确，依旧分3个部分：没有找到点号、点号在首端、点号在末端
+	if (dot_pos == string::npos) {
+		cout << "错误：缺少点号" << endl;
+		return 1;
+	}
+	if (dot_pos == 0) {
+		cout << "错误：点号在首端" << endl;
+		return 1;
+	}
+	if (dot_pos == rest.length() - 1) {
+		cout << "错误：点号在y.z末尾" << endl;
+		return 1;
+	}
+	//分割y和z
+	string y = rest.substr(0, dot_pos);
+	string z = rest.substr(dot_pos + 1);
+
+	//接下来应该检查y是否有效
+	if (!isvalidseg) {//特别注意这里的逻辑是不合法才进入这个分析报错，所以是前面有个！
+		if (y.length() > 20) {
+			cout << "错误：y部分长度超过了20" << endl;
+		}
+		else {
+			cout << "错误：y部分中含有非法字符" << endl;
+		}
+		return 1;
+	}
+	//同上，检查z中是否有效
+	if (!isvalidseg) {
+		if (z.length() > 20) {
+			cout << "错误：z部分长度超过了20" << endl;
+		}
+		else {
+			cout << "错误：z中含有非法字符" << endl;
+		}
+		return 1;
+	}
+	//接下来要单独针对z部分含有点号数量的问题进行盘断
+	int i = 0;//用来记点号的数量
+	for (char c : z) {//诶呦还被deepseek夸了，就这么写！学会了没，就是让z字符串中的每一个字符都遍历循环
+		if (c == '.') {
+			i++;
+		}
+
+	}
+	if (i > 2) {
+		cout << "错误：z中含有的点的个数超过了2个" << endl;
+		return 1;//每个分支报错后都要return 1表示程序异常结束退出!这样程序会在遇到一个问题之后就推出而不会一直执行到底反而最后输一个什么程序正常之类的
+	}
+	//所有的检查都通过了，说明邮箱地址合法有效
+	cout << "邮箱地址合法有效" << endl;
+	return 0;//最后返回0表示程序正常结束
+}
+
+
