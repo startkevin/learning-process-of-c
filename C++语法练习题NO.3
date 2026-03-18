@@ -9,7 +9,7 @@
 
 代码实现：
 #include<iostream>
-#include<cstring>//相当于把c中的string库函数如strcpy,strlen等等都搬到namespace中
+#include<cstring>//相当于把c中的string库函数如strcpy,strlen等等都搬到namespace std中
 using namespace std;
 //首先定义题目所需结构体
 struct BinNum {
@@ -45,16 +45,13 @@ BinNum add(BinNum n1, BinNum n2) {
 
 	while (i >= 0 || j >= 0 || carry) {
 		int bit1 = (i >= 0) ? (n1.bits[i] - '0') : 0;//哎呀这个真的太复杂了，我来给你解释一下，如果i>=0就是说n1还有位
-		//n1.bits[i]是字符，结果要么是‘0’要么是‘1’，‘0’-‘0’=0（数字0！）‘1’-‘0’=1（数字1！）
+		                                             //n1.bits[i]是字符，结果要么是‘0’要么是‘1’，‘0’-‘0’=0（数字0！）‘1’-‘0’=1（数字1！）
 		int bit2 = (j >= 0) ? (n2.bits[j] - '0') : 0;//本质上作用就是分别逐项提取n1,n2某对应位置上的数字
 
 		int sum = bit1 + bit2 + carry;
-
-		temp.bits[k] = (sum % 2) + '0';//注意，这个+‘0’字符真的特别重要，因为我们存的格式实际上就是char类型
-
-		//carry作为新的进位
-		carry = sum / 2;
-
+        temp.bits[k] = (sum % 2) + '0';//注意，这个+‘0’字符真的特别重要，因为我们存的格式实际上就是char类型
+		carry = sum / 2;//carry作为新的进位
+        //这一部分关于sum和carry的部分直接记下来
 
 		i--;
 		j--;
@@ -62,7 +59,7 @@ BinNum add(BinNum n1, BinNum n2) {
 		//三个指针分别左移进行下一位的计算
 
 	}
-	//循环结束后，检查K的值，如果K>=0,则证明我们并没有用到最高进位，我们需要把结果整体向左挪一位
+	//循环结束后，检查K的值，如果K>=0,则证明我们并没有用到最高进位，我们需要把结果整体向左挪一位，特别注意，角标前移是在每次循环结束时才移动，因此当它已经计算对齐完后还会再减去一个1；
 	if (k >= 0) {
 		for (int m = 0; m <= maxLen; m++) {
 			temp.bits[m] = temp.bits[m + 1];
