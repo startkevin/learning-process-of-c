@@ -1,0 +1,93 @@
+编程题目：
+加法函数重载：利用函数重载实现十进制（int）、字符串（char *）、无符号二进制（struct BinNum）的加法。
+加法函数格式为：TYPE add(TYPE n1, TYPE n2)，其中 TYPE 为各种不同的类型。
+要求：（1）字符串的加法是将 char *n2 追加到 char *n1 的尾部，该功能不得使用 C++ 的 string 类；
+（2）二进制的类型为结构体 BinNum（其中包含一个字符数组），加法用 BinNum add(BinNum n1, BinNum n2) 实现。编写主函数，调用这些加法并在屏幕上输出结果。
+例如输入：1122 2211 abc ab 00110 00010
+输出：3333, abcab, 01000
+
+
+代码实现：
+#include<iostream>
+#include<cstring>//相当于把c中的string库函数如strcpy,strlen等等都搬到namespace中
+using namespace std;
+//首先定义题目所需结构体
+struct BinNum {
+	char bits[100];
+};
+//完成第一个函数：十进制int类型的加法
+int add(int n1, int n2) {
+	int sum = n1 + n2;
+	return sum;//特别注意：不能用cout << sum << endl;因为函数要求了要有返回值为int类型的，而不能直接输出
+}
+//第二个函数：字符串的加法
+char* add(char* n1, char* n2) {
+	char* string=strcat(n1, n2);
+	return string;
+}
+//第三个函数：无符号二进制的加法
+BinNum add(BinNum n1, BinNum n2) {
+	BinNum temp;
+	int len1 = strlen(n1.bits);//即使是字符数组也可以用strlen来获取到底有多少位
+	int len2 = strlen(n2.bits);
+    
+	int maxLen = (len1 > len2) ? len1 : len2;//看看，多么优美而简洁的写法，与其用两个if比较再开辟两个分支大量重复，这无疑是最优解
+
+	int carry = 0;//初始化进位为0
+
+	//设置两个动态角标，分别代表n1和n2的最低位
+	int i = len1 - 1;
+	int j = len2 - 1;
+
+	int k = maxLen;//k为temp的最低位，比n1,n2多一位，用于预留首位1+1可能引起的多一位变化；
+	temp.bits[maxLen + 1] = '\0';//这和数字没关系，是用来存放结束符的！
+
+
+	while (i >= 0 || j >= 0 || carry) {
+		int bit1 = (i >= 0) ? (n1.bits[i] - '0') : 0;//哎呀这个真的太复杂了，我来给你解释一下，如果i>=0就是说n1还有位
+		//n1.bits[i]是字符，结果要么是‘0’要么是‘1’，‘0’-‘0’=0（数字0！）‘1’-‘0’=1（数字1！）
+		int bit2 = (j >= 0) ? (n2.bits[j] - '0') : 0;//本质上作用就是分别逐项提取n1,n2某对应位置上的数字
+
+		int sum = bit1 + bit2 + carry;
+
+		temp.bits[k] = (sum % 2) + '0';//注意，这个+‘0’字符真的特别重要，因为我们存的格式实际上就是char类型
+
+		//carry作为新的进位
+		carry = sum / 2;
+
+
+		i--;
+		j--;
+		k--;
+		//三个指针分别左移进行下一位的计算
+
+	}
+	//循环结束后，检查K的值，如果K>=0,则证明我们并没有用到最高进位，我们需要把结果整体向左挪一位
+	if (k >= 0) {
+		for (int m = 0; m <= maxLen; m++) {
+			temp.bits[m] = temp.bits[m + 1];
+		
+		}
+	
+	}
+	return temp;	
+}
+
+
+
+int main() {
+	int a, b;
+	char s1[100], s2[100];
+	BinNum b1, b2;
+
+	cin >> a >> b;
+	cin >> s1 >> s2;
+	cin >> b1.bits >> b2.bits;
+
+	cout << add(a, b) << endl;
+	cout << add(s1, s2) << endl;
+	cout << add(b1, b2) << endl;
+
+	return 0;
+
+}
