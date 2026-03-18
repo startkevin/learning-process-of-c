@@ -1,0 +1,96 @@
+C++编程题目
+学生成绩统计：编写一个程序，提示用户输入一个班每个学生的姓名和一门课的成绩（最多不超过 10 人），存入一个结构体数组中，
+当输入成绩为负值时，输入结束，使用函数分别实现以下功能（不使用全局变量）：
+(a). 统计不及格人数并打印不及格学生名单；
+(b). 统计成绩在全班平均分之上的学生人数，并打印这些学生的名单；
+(c). 将成绩分为六个分数段，60 分以下为第 1 段，60–69 为第 2 段，70–79 为第 3 段，80–89 为第 4 段，90–99 为第 5 段，100 分为第 6 段，统计各分数段的人数。
+编写主函数测试以上函数的正确性。
+
+
+代码实现：
+#include<iostream>
+#include<string>
+using namespace std;
+struct Student {
+	string name;//存储名字不一定要用字符数组，可以直接用字符串啊甜菜！
+	int score;
+};
+//函数一：列出不及格学生名单
+void countFail(Student stu[], int n) {
+	int failNum = 0; string temp[n];
+	for (int i = 0; i < n; i++) {
+		if (stu[i].score < 60) {
+			temp[failNum] = stu[i].name;
+			failNum++;
+		}
+	
+	}
+	cout <<"不及格人数"<< failNum << endl;
+	cout << "不及格名单:" << endl;
+	for (int i = 0; i < failNum; i++) {
+		cout << temp[i] << endl;
+	}
+}
+//函数二：列出位于平均值之上的学生名单
+void countAboveAverage(Student stu[], int n) {
+	int totalScore = 0; double average = 0;
+	for (int i = 0; i < n; i++) {
+		totalScore += stu[i].score;
+	}
+	average = (totalScore) / n;
+	int num = 0; string temp[n];
+	for (int i = 0; i < n; i++) {
+		if (stu[i].score > average) {
+			temp[num] = stu[i].name;
+			num++;
+		}    
+	}
+	cout << "超过平均分的人数：" << num << endl;
+	cout << "超过平均分的学生名单：" << endl;
+	for (int i = 0; i < num; i++) {
+		cout << temp[i] << endl;
+	}
+	
+}
+//函数三：对学生成绩进行分段统计：
+void countScoreSegment(Student stu[], int n) {
+	int a = 0, b = 0, c = 0, d = 0, e = 0, f = 0;
+	for (int i = 0; i < n; i++) {
+		if (stu[i].score < 60) { a++; }
+		else if (60<=stu[i].score&&stu[i].score <= 69) { b++; }
+		else if (70 <= stu[i].score && stu[i].score < =79) { c++; }
+		else if (80 <= stu[i].score && stu[i].score < =89) { d++; }
+		else if (90 <= stu[i].score && stu[i].score <= 99) { e++; }
+		else if (stu[i].score ==100) { f++; }
+	}
+	cout << "分数<60的学生人数" << a << endl;
+	cout << "分数大于等于60小于69的学生人数" << b << endl;
+	cout << "分数大于等于70小于79的学生人数" << c << endl;
+	cout << "分数大于等于80小于89的学生人数" << d << endl;
+	cout << "分数大于等于90小于99的学生人数" << e << endl;
+	cout << "分数为100的学生人数" << f << endl;
+
+}
+
+
+
+int main() {
+	//step 1：填写学生名单
+	Student students[10];//注意结构体类型就写你的命名
+	int n;
+	for (int i = 0; i < 10; i++) {
+		cout << "请输入第i位学生的姓名和成绩" << i + 1 << endl;//cout输出提示信息，i+1是为了让用户输入的时候更清晰知道是第几位学生
+		cin >> students[i].name >> students[i].score;//注意用点号来访问结构体成员，输入学生的姓名和成绩	
+		if (students[i].score < 0) {
+			break;//如果输入的成绩小于0，直接跳出循环，注意这条设置在输入成绩的后面，这样就不会让用户输入负数成绩了
+		}
+		n = i;
+	}
+	cout << "统计结果如下：" << endl;
+	//调用各统计函数
+	countFail(students, n);//传入数组名（首地址），以及人数
+	countAboveAverage(students, n);
+	countScoreSegment(students, n);
+	
+	return 0;
+}
