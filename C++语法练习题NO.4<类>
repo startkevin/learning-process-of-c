@@ -1,0 +1,71 @@
+编写一个程序，定义课程类 course，要求：
+(a). 包含课程名 name（字符指针）和该课程的学分 credit（浮点数）等成员变量；
+(b). 包含成员函数，用于在屏幕输出课程的信息；
+(c). 包含构造函数，用于对成员变量初始化，尤其是对课程名进行动态内存分配；
+(d). 重载构造函数，用多种方式对成员变量初始化；
+(e). 包含析构函数，用于释放已分配的内存。
+编写主函数，创建课程对象，测试构造函数和析构函数的调用顺序、成员函数的功能。
+
+代码实现：
+#include <iostream>
+#include<cstring>
+using namespace std;
+class course {
+	char* name;
+	float credit;
+
+public://统一在class里面先只申明，然后再在class外面写
+	void printfClass();
+	//构造函数1：带有2个函数初始化参数
+	course(const char* n, float c);
+	//构造函数2：重载，只带课程名
+	course(const char* n);
+	//构造函数3：重载，不带参数，使用默认值
+	course();
+	//析构函数
+	~course();
+
+};
+//成员函数，用于输出课程信息
+void course::printfClass() {
+	cout << "课程名称：" << name << "课程学分：" << credit << endl;
+}
+
+course::course(const char*n,float c) {//这个构造函数的精髓在于是靠外部（main）传参进来初始化成员变量的
+	cout << "调用构造函数1(name,credit)" << endl;
+	name = new char[strlen(n) + 1];
+	strcpy(name, n);//n是传入该构造函数的！
+	credit = c;//c也是外部传入的
+}
+course::course(const char* n) {
+	cout << "调用构造函数2：初始化课程名称" << endl;
+	name = new char[strlen(n) + 1];//对分配内存这种灵活取长度的方式还不熟悉哦
+	strcpy(name,n);
+	credit = 3.0;//不依靠传入设定参数初始值而是直接赋值。
+
+}
+course::course() {
+	cout << "调用构造函数3(不带传参)" << endl;
+	name = new char[20];
+	strcpy(name, "Math");
+	credit = 3.0;
+}
+//析构函数：
+course::~course() {
+	delete[]name;
+}
+int main() {
+	char str[100];//注意，在这里str不要写为char*str的指针形式，否则是一个无指向的野指针
+	//特别提醒：数组名在大多情况下会自动转为指针。所以不用担心传入的形参为指针形式。
+	float c;
+	cin >> str >> c;
+	course course1(str,c);//就这样直接在对象后面跟一个括号里面装着参数进行初始化
+	course1.printfClass();//调用输出函数看看结果
+
+	course course2(str);
+	course2.printfClass();
+
+	course course3;//不传参数就不要在对象后面加括号，不然就变成了在声明了一个函数
+	course3.printfClass();//相反的，在调用这个信息输出函数时要加上括号，才是调用函数
+	return 0;
+}
