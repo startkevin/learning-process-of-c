@@ -1,0 +1,63 @@
+C++编程题目：
+开销计算：设计一个计算个人开销的类 cost，它的数据成员包括：
+每天的餐饮开销 meal、每月的交通开销 transport、一年的学习开销 study。
+编写一个程序，定义一个具有 10 个元素的对象数组（代表 10 个人），询问每个人的每项开销，然后显示一年的总开销。
+程序需进行输人有效性检验：每个人每天的餐饮开销不能小于 20。
+
+
+思路的整理与分析：
+好的，那我们先来梳理一下这道题目的思路：首先我们要明确几个程序设计上的问题，我们要分别在类和main函数中
+事先什么功能，我们不妨将main视作一个餐厅中的客人点单处，主要承担的作用是与用户进行交互，是变量和变化
+的地方，相应地类cost则承担的更多是类似于点餐系统的功能，规则相对固定不变。
+ok，弄明白了他们两个的大致角色，接下来我们要细分一下了，
+首先就是类total_cost：
+1.定义成员变量meal,transport,study
+2.定义成员函数：计算一年的总开销
+（3）关于构造函数和析构函数需不需要存在的问题：需要构造函数的情况：a.成员变量需要在创建之初赋初始值
+                                                             b.成员变量是指针，需要分配内存
+    而本题成员变量都不是指针，也不需要分配动态内存，故不需要构造函数，自然也不需要配套的析构函数                                                         
+然后我们看看main函数该干什么：
+1.首先创建对象数组（按题目要求，即10个人）
+2.询问输入对应花销值
+3.进行输入有效性检验
+
+
+代码实现：#include<iostream>
+using namespace std;
+class totalCost {
+public:
+	float meal_day;
+	float transport_mon;
+	float study_year;
+public:
+	float cacucost();//在类中申明不需要参数
+
+};
+float totalCost::cacucost() {
+	return meal_day* 365 + transport_mon * 12 + study_year;
+}
+int main() {
+	totalCost people[10];
+	float p, q, l,result;
+	for (int i = 0; i < 10; i++) {
+		do {
+			cout << "每日餐饮开销：";
+			cin >> p;
+			if (p < 20) {
+				cout << "餐费不能小于20元，请重新输入！" << endl;
+			}
+		} while (p < 20);//只要餐费小于20元就重复输入
+
+		people[i].meal_day = p;//学会如何给成员变量赋值
+		cout << "每月通勤开销：";
+		cin >> q;
+		people[i].transport_mon = q;
+		cout << "每年学习开销：";
+		cin >> l;
+		people[i].study_year = l;
+
+		result = people[i].cacucost();
+		cout << result << endl;
+
+	}
+	return 0;
