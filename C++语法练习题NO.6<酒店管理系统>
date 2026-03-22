@@ -1,0 +1,109 @@
+编程题：
+酒店客房管理：编写一个程序，用于管理 180 间客房（9 层楼，每层楼 20 间客房），
+定义客房类 room，要求包含房号 id（整数，范围从 101 到 920）、价格 price（整数）、入住的顾客姓名 cname（字符指针）和身份证号 cid（字符指针）等成员变量，
+还包含成员函数，实现订房功能（增添住客的信息）和退房功能（打印消费金额、删除住客信息）。
+编写主函数，建立一个 9*20 的二维对象数组，用于存储客房的信息，然后演示订房和退房功能（要求用指针指向数组元素进行操作）。
+
+代码实现：
+#include<iostream>
+using namespace std;
+#include<cstring>
+
+//定义类room
+class room {
+    int id;
+    int price;
+    char* cname;
+    char* cid;
+    bool isbooked;
+public:
+    void addinformation(char*, char*);
+    void checkout(int);
+    room(int);//由于我们想要实现不同楼层房间价格不同，因此我们需要通过不同房间号来对构造函数进行不通的初始化
+    //而我们忽略最严重的一个点就是其实构造函数可以传参数，然后我们可以通过在构造函数内部编程来实现不同数值的price初始化
+    ~room();
+};
+
+
+
+//登记入住函数
+void room::addinformation(char* m, char* n) {
+    if (isbooked) {
+        cout << "该房间已被入住" << endl;
+        return;//对于void函数来说，return;（后面不跟任何数字）的作用就是结束函数的执行，后续的代码将不再被执行
+    }
+    else {
+        cname = new char[strlen(m) + 1];
+        strcpy(cname, m);
+        cid = new char[strlen(n) + 1];
+        strcpy(cid, n);
+        isbooked = true;//别忘了更新房间状态了！不然就会导致重复入住的情况发生了！
+    }
+}
+
+
+//退房函数
+void room::checkout(int days) {//注意我们不需要把days变为成员变量，他指数参与最后的金额计算。
+    int totalcost = price * days;
+    cout << "一共入住：" << days << "天，房费总价为：" << totalcost << endl;
+    delete[]cname;
+    delete[]cid;
+    cname = NULL;//哎呀呀差一点忘了把cname和cid重置了！这样就会导致野指针问题，虽然我们已经释放了它们占用的内存空间，但是仍然需要重新更新他们的状态
+    cid = NULL;
+    isbooked = false;
+    cout << "退房成功！" << endl;
+}
+
+
+
+//构造函数
+room::room(int roomid) {
+    id = roomid;
+    price = (roomid / 100 <= 5) ? 300 : 500;//int函数除法是向0取整的。
+    cname = NULL;//千万不要写char* cname = NULL; 这样会导致cname成为一个局部变量，而不是类的成员变量
+    cid = NULL;//在C++中，如果写了类型+变量名，编译器会认为这是一个新的变量声明，而不是对成员变量的赋值
+    //不建议把这两个量初始化为“unkown”因为这样我们还得为它分配内存空间，在登记信息函数中我想要再录入信息还得先释放它的所占空间
+    isbooked = false;
+
+}
+
+//析构函数（对象数组是局部变量不需要手动释放，我们只需要释放cname和cid就行）
+room::~room() {
+    if (cname != NULL) {//防止是空房间，或者是之前已经退过房了，这样就会导致重复释放内存空间的情况发生了！
+        delete[]cname;
+        cname = NULL;
+    }
+    if (cid != NULL) {
+        delete[]cid;
+        cid = NULL;//一定一定要注意释放了空间，指针一定要重置！！！不然野指针啦！
+    }
+}
+
+
+//最后的主函数部分：
+
+int main() {
+    room *hotel[9][20];//这里我们必须改为指针数组，因为我们的构造函数是含参的而在创建180个对象时编译器只能调用无参函数（因为你创建对象的时候没有给他们房间号呀）
+    //创建之后我们还需要给每个数组编号（房间号）
+    for (int floor = 1; floor < 10; floor++) {
+        for (int num = 1; num < 21; num++) {
+            int roomid = floor * 100 + num;
+            hotel[floor - 1][num - 1] = new room(roomid);//做了3件事1.分配了一块存放room对象的内存空间 2.调用了构造函数（传入了id） 3.把返回的地址赋值给了hotel[floor - 1][num - 1]
+            //无参构造函数自动调用，含参构造函数需要我们自己调用（并且传递参数）
+        }
+    }
+
+    //登记入住实例：
+    hotel[0][1]->addinformation("张三", "123456789012345678");//注意这里我们需要用->来调用成员函数，因为hotel[0][0]是一个指针变量
+    hotel[0][1]->checkout(3);//住了三天
+
+    for (int floor = 1; floor < 10; floor++) {
+        for (int num = 1; num < 21; num++) {
+            delete hotel[floor - 1][num - 1];//这里我们需要手动释放每个对象占用的内存空间，因为我们之前是通过new来创建对象的
+            hotel[floor - 1][num - 1] = NULL;//同样的道理，释放了空间之后指针一定要重置！不然野指针啦！
+        }
+    }
+    //总结：只要用了new来分配空间，那就一定要有对应的delete来释放空间
+    return 0;
+
+}
