@@ -1,0 +1,52 @@
+ 编程题：
+文本输出：编写一个程序，要求用户输入文件名，在屏幕上显示文件的内容。在显示时，每行后面都要带上一个冒号和该行的单词数目。例如：
+This a test : 3
+for you. : 2
+Date is 2022 5 31. : 5
+如果一屏显示不完文件的内容，那么显示 24 行后，暂停一下，等待用户按任意键以后继续显示后面的 24 行。
+采用编辑器（如记事本）创建一个文本文件，以测试这个程序。
+
+代码实现：
+#include<iostream>
+using namespace std;
+#include<fstream>
+#include<cstring>
+#include<sstream>//stringstream是一个可以把字符串当成输入流来处理的类，定义在<sstream>头文件中
+void coutf(fstream &f) {//传入文件需写为引用形式
+    string str;
+    int numOfLines = 0;//记下行数，即读取的第几行
+    while (true) {  //while(true)即无限循环，知道进入if的break分支才会退出（也就是直到文件读完才结束循环）
+        getline(f, str);//从f中读取一行字符串存到str中
+        if (f.fail()) {//如果读取失败了，说明已经读到文件末尾了,就可以结束循环了
+            break;
+        }
+        stringstream ss(str);//把str字符串放到stringstream对象ss中，方便后续的单词读取
+                             //这一步操作相当于是在定义一个stringstream对象ss的同时给它赋予了一个初始值str
+        int numOfWords=0;
+        string word;//string类型特别神奇，它会自适应字符串长度，并且每次赋值会覆盖旧值
+        while (ss>>word) {
+            numOfWords++;
+        }
+        cout << str << ":" << numOfWords << endl;    
+        numOfLines++;
+        //实现到了24行接需要用户按键来确定是否继续
+        if (numOfLines % 24 == 0) {
+            cout << "已显示：" << numOfLines << "行，按回车决定是否继续" << endl;
+            cin.get();//等待输入任何字符但必须按回车才能继续
+        }
+    }
+}
+
+int main() {
+    string filename;
+    cout << "请输入文件名" << endl;
+    cin >> filename;
+    fstream f(filename);
+    if (f.fail()) {
+        cout << "文件打开失败" << endl;
+        exit(0);
+    }
+    coutf(f);
+    f.close();
+    return 0;
+}
