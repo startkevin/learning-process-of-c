@@ -10,10 +10,10 @@ Date is 2022 5 31. : 5
 #include<iostream>
 using namespace std;
 #include<fstream>
-#include<cstring>
-#include<sstream>//stringstream是一个可以把字符串当成输入流来处理的类，定义在<sstream>头文件中
+#include<string>
+#include<sstream>  //stringstream是一个可以把字符串当成输入流来处理的类，定义在<sstream>头文件中
 void coutf(fstream &f) {//传入文件需写为引用形式
-    string str;
+    string str;  //定义一个字符串，用于储存读取的文件的每一行字符串。
     int numOfLines = 0;//记下行数，即读取的第几行
     while (true) {  //while(true)即无限循环，知道进入if的break分支才会退出（也就是直到文件读完才结束循环）
         getline(f, str);//从f中读取一行字符串存到str中
@@ -23,7 +23,7 @@ void coutf(fstream &f) {//传入文件需写为引用形式
         stringstream ss(str);//把str字符串放到stringstream对象ss中，方便后续的单词读取
                              //这一步操作相当于是在定义一个stringstream对象ss的同时给它赋予了一个初始值str
         int numOfWords=0;
-        string word;//string类型特别神奇，它会自适应字符串长度，并且每次赋值会覆盖旧值
+        string word;//  C++中的string类型特别神奇（类内部含有一个动态数组），它会自适应字符串长度，并且每次赋值会覆盖旧值
         while (ss>>word) {
             numOfWords++;
         }
@@ -40,7 +40,7 @@ void coutf(fstream &f) {//传入文件需写为引用形式
 int main() {
     string filename;
     cout << "请输入文件名" << endl;
-    cin >> filename;
+    cin >> filename;//注意有可能会截断带有空格的文件名，建议改用"getline(cin,filename)"
     fstream f(filename);
     if (f.fail()) {
         cout << "文件打开失败" << endl;
@@ -50,3 +50,26 @@ int main() {
     f.close();
     return 0;
 }
+
+
+新知识点总结：
+一、关于一些头文件的使用辨析：
+1.<string>   eg. string str="hello";
+2.<cstring>  eg. strcpy(),strlen();strcmp();
+3.<sstream>  eg.stringstream ss(str)//创建一个stringstream流的对象ss，并赋初始值字符串str，可用作ss>>xxxx;
+二、其他知识点积累
+1.向函数中传文件参数必须用引用，例如function(fstream &f)
+2.头文件<string>下的类string在C++中具有自动适应字符串长度和输入新的值就会自动覆盖旧值的特点。
+3.注意区分两种getline!  
+      a. 它们一种是属于istream类的，通常要加文件f.前缀例如f.getline(str,1000,'\n')//意思是从文件f中最多读取1000个字符（或遇到回车截断）
+然后将读取到的字符都存入str中，不过目标str必须为char数组，且需要指定最大长度
+      b.另一种是定义在<string>中的全局函数，写法为：getline(f,str)//意思是从f中读取字符串（直到回车截断），存入str中
+不需要指定长度大小（会自动调整）。
+4.while(true){}是无限循环的意思，会一直执行直到进入内部某个包含break操作的if分支
+5.在该题环境下我们学会了如何使用stringstream ss（str）,其目的是让我们能够执行ss>>word操作，从而利用>>特性来进行单词的计数。
+   *核心原因*———— >> 符号是给“流”用的，而不是给“字符串”用的，例如cin是输入流，str只是字符串，只有ss才是字符串流。
+6.关于while条件的另一种写法，本题中的while(ss>>word){numOfword++}//意思是每执行一次读取单词操作，就完成一次单词计数，更巧妙的是每次string word会自动覆盖重置
+7.关于题目条件的翻译"每n行就进行询问（暂停）"————其实可以用num%n==0来表示倍数，然后在循环内部写写cin.get()用户必须输入"回车"
+   才能决定继续循环，否则将停滞。
+
+
