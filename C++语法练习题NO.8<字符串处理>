@@ -1,0 +1,101 @@
+编程题目：
+文本转存：编写一个文件转存程序。
+首先，将输入文件中的每一行的单词逆序排列后存储到第二个文件中。
+然后，将输入文件中的每一行的单词按字典序排列后存储到第三个文件中。
+采用编辑器（如记事本）创建一个文本文件，以测试这个程序。
+
+代码实现：
+#include<iostream>
+using namespace std;
+#include<fstream>
+#include<sstream>
+#include<string>
+#include<cstring>
+void reverseword(fstream &f,fstream &f2) {
+	f.seekg(0L, ios::beg);
+	f.clear();
+	string line;
+	//总的来说，我们的思路是逐行逐行的进行倒序输出到f2
+	while (getline(f,line)) {//这种定义在全局函数中的getline（）中的第一个应该是数据来源
+		int n = 0;
+		if (f.fail()) {
+			break;
+		}
+		stringstream s1(line);
+		string word;
+		while (s1 >> word) {
+			n++;//先统计文本这一行中的单词数量n
+		}
+	
+	//创建一个字符串数组
+	string* temp = new string[n];
+
+		stringstream s2(line);
+		for (int i = 0; i < n;i++) {
+			s2 >> temp[i];
+		}
+		for (int i = n - 1; i >= 0; i--) {
+			f2 << temp[i] << " ";
+		}	delete[]temp;//注意temp是一个在while循环中创建的动态数组，所以每次循环结束都要释放掉它占用的内存
+	}
+}
+
+//由于strmp函数只能实现两两之间的单词的字典序比较，因此我们恰好可以利用冒泡排序来实现他
+void sortword(fstream& f1, fstream& f3){
+	f1.seekg(0L,ios::beg);
+	f1.clear();
+	string line;
+	while (getline(f1, line) ){
+		if (f1.fail()) {
+			break;
+		}   stringstream s(line);
+		string word;
+		int n = 0;
+		while (s >> word) {
+			n++;
+		}
+		stringstream s1(line);//重新定义一个stringstream对象s来读取这一行中的单词，因为之前的那个stringstream对象s已经被读取到行尾了，所以需要重新定义一个新的stringstream对象来读取这一��中的单词
+		string* temp = new string[n];
+		for (int i = 0; i < n; i++) {
+			s1 >> temp[i];
+		}
+		for (int i = 0; i < n - 1; i++) {
+			for (int j = 0; j < n - i - 1; j++) {			
+				if (temp[j]>temp[j+1]) {
+					string temp1 = temp[j];
+					temp[j] = temp[j + 1];
+					temp[j + 1] = temp1;
+				}
+			}
+		}
+		for (int i = 0; i < n; i++) {
+			f3 << temp[i] << " ";
+		}
+		delete[]temp;
+    }
+}
+
+int main() {
+	fstream f("test.txt", ios::in);
+	fstream f2("reverse.txt", ios::out);
+	fstream f3("sort.txt", ios::out);//写入文件得用out模式!!!
+	if (f.fail()) {
+		cout << "单开文件失败" << endl;
+		exit(0);
+	}
+	if (f2.fail()) {
+		cout << "单开文件失败" << endl;
+		exit(0);
+	}
+	if (f3.fail()) {
+		cout << "单开文件失败" << endl;
+		exit(0);
+	}
+	reverseword(f, f2);
+	sortword(f, f3);
+	f.close();
+	f2.close();
+	f3.close();
+	return 0;
+
+}
