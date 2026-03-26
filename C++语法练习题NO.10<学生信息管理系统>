@@ -1,0 +1,162 @@
+题目要求：编写一个能实现对学生信息进行管理，实现创建学生信息文件，编辑学生信息，输出显示学生信息3个功能的程序。
+代码实现：
+#include<iostream>
+#include<iomanip>
+#include<fstream>
+using namespace std;
+//定义一个学生结构体
+struct Info {
+	char name[21];
+	int age;
+	char address[51];
+	char phone[14];
+	char email[51];
+};
+void createFile(fstream &);//创建学生信息文件
+void editFile(fstream&);//编辑学生信息文件
+void showFile(fstream&);//显示输出学生信息文件
+
+//编写第一个函数：create函数
+void createFile(fstream& File) {
+	Info  students[5];//定义一个结构体数组
+	for (int i = 0; i < 5; i++) {
+		cout << "请输入学生姓名：" << endl;
+		cin >> students[i].name;
+		cout << "请输入学生年龄" << endl;
+		cin >> students[i].age;
+		cout << "请输入学生地址" << endl;
+		getline(cin, students[i].address);//考虑到有的时候地址会包含空格的情况
+		cout << "请输入学生电话号码" << endl;
+		cin >> students[i].phone; 
+		cout << "请输入学生邮箱地址" << endl;
+		cin >> students[i].email;
+	}
+	//手动填充完了5个学生的信息结构体，接下来我们需要逐步把他们写入文件中，以此来完成信息文件的创建
+	for (int i = 0; i < 5; i++) {
+		cout << "向文件中写入信息" << endl;
+		file.write((char*)&students[i], sizeof(students));
+	}
+	file.flush();//将缓冲区数据强制写入磁盘中，防止重要程序丢失。
+	//当你向文件中写入数据时为了效率，数据不会立刻写入硬盘，而是会在缓冲区内暂放，这个个操作相当于强制出发数据存档，防止数据丢失
+}
+
+
+//编写第二个函数：eidt函数
+//首先我们需要明确该函数实现的逻辑：1.将原信息读出来存入新的结构体2.对该结构体的内容进行修改 3.再用该结构体覆写掉源文件中的结构体
+void editFile(fstream &file) {
+	Info person;//首先我们需要一个同类型的结构体来做修改的载体
+	long num;//用于检索我们想要修改几号学生的信息，用long是因为他所能包含的数据量更大
+
+	file.clear();//特别注意只要是前面打开过操作过的文件在进行新的处理之前一定要进行clear做状态位的复原
+	cin >> num;
+	cin.ignore();//这种cin后面由于要接一个cin.getline也要cin.ignore。。。。。
+	//由于该函数只接收了文件file，不可能读到原有的student[]!所以我们的思路应该是直接从f中读取person再对person进行修改
+	file.seekg((num-1)*sizeof(Info),ios::beg);
+	file.read((char*)&person, sizeof(person));
+	cout << "学生姓名为：" << person.name << endl;    //显示原有该项信息
+	cin.getline(person.name,21);    //读入新的结构体中
+	cout << "学生年龄为：" << person.age << endl;
+	cin >> person.age;     //年龄是int类型的！不能用 getline(person.age, 20);！
+	cin.ignore();         //关键是在cin>>后面使用getline的时候中间必须加cin.ignore()清除cin在缓冲区留下的换行符
+	cout << "学生地址为：" << person.address<< endl;
+	cin.getline(person.address,51);   //从键盘上获取新的修改信息要加cin.的前缀在getline前
+	cout << "学生电话号码为：" << person.phone << endl;
+	cin.getline( person.phone,50);
+	cout << "学生邮箱地址为：" << person.email << endl;
+	cin.getline(person.email,50);
+
+	//利用定位将更新信息的结构体传回原文件覆写原结构体
+	file.seekp((num-1)* (sizeof(Info)), ios::beg);
+	file.write((char*)&person, sizeof(person));
+	file.flush();
+
+}
+
+//编写第三个函数：showFile函数
+void showFile(fstream& f) {
+	Info record = {" ",0," "," "," "};//我们创建一个结构体作为输出的载体，并且初始化它
+	f.clear();//即将读取文件，要先清理掉之前函数可能影响的文件的标志位。
+	f.seekg(0L, ios::beg);//重置光标到文件开头
+	while (f.read((char*)&record, sizeof(record));) {//如果还是用f.eof()容易导致多输出一次的问题
+		//打开文件并开始一个结构体一个结构体的读,我发现你很容易忽略一个信息就是这个句子的语义是从f中读取，并存到record的地址中
+		if (f.fail()) {
+			exit(0);
+		}
+		cout << "姓名" << record.name << endl;
+		cout << "年龄" << record.age<< endl;
+		cout << "住址" << record.address << endl;
+		cout << "电话号码" << record.phone << endl;
+		cout << "邮箱地址" << record.email << endl;
+	}
+}
+
+
+int main() {
+	int choice;//相当于菜单的动态按键
+	fstream people("Info.dat", ios::in | ios::out | ios::binary);//打开文件，进行操作
+	if (people.fail()) {
+		cout << "打开文件失败" << endl;
+		exit(0);
+	}
+	//来啦！要学会怎么写菜单！
+	while (true) {
+		cout << "\n\t 1.Create 2.Show 3.Edit 4.Exit \n";//\n为换行符，\t即在新行的开头空出一段距离（通常为4个或8个空格）
+		cin >> choice;//为4个操作的序号
+		sitwch(choice) {
+		case 1: ctreateFile(people);//相应序号对应相应操作对应相应函数，创建学生信息文件
+			    break;
+		case 2: editFile(people);
+			    break;
+		case 3: showFile(people);
+			    break;
+		case 4: exit(0);//exit(0)不仅仅是一个标识符而是一个能直接终止程序的函数
+		
+		}
+	
+	}
+	people.close();//关闭文件
+}
+
+一些重要知识点总结：
+1.cin>>和getline()之间必须要有cin.ignore()用于清除cin读入的换行符。
+
+2.又需要用户从键盘键入，又需要可能包含空格的字符串，用cin.geiline()//特别容易忘记+cin.的前缀。
+
+3.向文件中写入多个结构体或数组都可以用这个模板：f.write((char*)(&)student,sizeof(...));//f.read同理
+  //值得注意的是，我们这句话的目的是将地址上的结构体或数组写入f中，但是数组名天然为地址，可以不用加取地址符&，可是结构体名不具备该功能，记得必须加&！
+  那如何实现多个写入？要用循环for(int i=0;i<n;i++){f.write((char*)(&)student,sizeof(student))}//即写入n个结构体。
+  
+4.f.flush();是强制将缓冲区的数据存入硬盘，一般来说为了提高效率，数据只会在缓冲区存满了之后才写入内存空间，利用这个可以强制触发数据写入，防止重要数据丢失
+
+5.对于可能很大的数据量n,我们一般不再写int n而是选择long n;
+
+6.还是旧事重提，对于一个可能被多次读取，写入，修改的文件，它的状态位是混乱的，因此在调用不同的文件处理函数之前，都建议用两件套初始化
+  即  f.clear();//清除重置所有混乱标志位
+      f.seekg(0L,ios::beg);//重置指针光标到文件的最开始，且如果是即将有写入操作则应该是f.seekp();//p指的是put
+      
+7.特别注意，在本程序中有反复犯的一个错误，就是我的edit函数中只传了一个参数就是文件f，而我想修改里面的参数即结构体student们
+  但实际上我们绝对不可能直接读取像getline(student[1].name,record);//不可能直接访问任何student你没有传student进来！
+  因此我们采取的策略是先利用f.seekg((n-1)*(sizeof(Info)),ios::beg)//即操作光标根据序号n跳转到文件中的对应位置，再用f.write
+  将该结构体内容复制给一个新空结构体，接着直接对新结构体进行信息修改操作后反向f.write回文件（用f.seekp同理定位）
+  存在文件中的结构体具有一个特点，就是原位置用f.write重新写入会有覆写效果！旧的那个就不见了！
+  
+8.再输出文件内容的时候建议写为while(f.read(...)),即把操作写成条件，这样可以避免多输出一次最后一个数据的问题
+//不要携程while(!f.eof())主要容易涉及到函数输出正确性的问题。
+
+9.学会怎么写菜单！首先定义一个储存用户选择的变量n,接着要用两套工具while+switch
+  在选择外面套一层while(可以在内部菜单设置退出选项用来退出循环)，而且要在内部写cout重复介绍选择，
+  然后主体用：    switch(n){//注意要跟大括号
+                 case 1: f1();//用户按1，执行1选项对应的操作函数
+                 ....
+                 ....
+
+                 case 4:exit(0);//即退出函数。
+  }
+
+      
+
+
+
+
+
+
