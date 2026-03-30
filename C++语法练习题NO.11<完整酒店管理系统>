@@ -1,0 +1,291 @@
+
+
+#include<iostream>
+#include<fstream>
+#include<iomanip>
+#include<cstring>
+#include<string>
+using namespace std;
+//先定义基本结构体
+struct Info {
+	char id[10];
+	int price;
+	bool booked;
+	bool checkIn;//这里先遗留一个问题，区分预定与入住的三种情况
+	char cname[20];
+	char cid[20];
+};
+
+
+
+//统一声明函数
+void addRoom(fstream&);//增加客房信息
+void deleteRoom(fstream&);//删除客房信息
+void showRoom(fstream&);//显示文件中的所有信息
+void bookRoom(fstream&);//（预订客房）修改某客房的预定记录
+void checkInRoom(fstream&);//（办理入住）修改某个客房的住客信息
+void findRoom(fstream&);//按照姓名查找某个住客房号
+void checkOut(fstream&);//办理退房，删除某客房的入住记录
+void countRoom(fstream&);//统计文件中的各类房间总数
+
+
+
+//接下来逐个实现函数
+
+
+
+
+//第一个：增加客房信息
+void addRoom(fstream&f) {//会错意了，这里增加客房信息的意思应该是让我们输入新房间的信息，然后追加到房间末尾
+	Info newRoom;///建立一个新的房间，并对它进行初始化
+	cout << "请输入房间号" << endl;
+	cin >> newRoom.id;
+	cout << "请输入房间价格" << endl;
+	cin >> newRoom.price;
+	newRoom.booked = false;
+	newRoom.checkIn = false;
+	f.clear();
+	f.seekp(0L, ios::end);
+	f.write((char*)&newRoom, sizeof(Info));
+	f.flush();//写入数据必备
+}
+
+
+
+
+//第二个函数：删除客房信息
+void deleteRoom(fstream& f, int n) {
+	fstream tempf("temp.dat", ios::out | ios::binary);//创建了一个新文件用于重新写入新的数据
+	Info temp,next;
+	int roomNum;
+	cout << "要删除第几个房间" << endl;
+	cin >> roomNum; 
+	f.clear();
+	f.seekg(0L,ios::beg);
+	for (int i = 0; i < n ; i++) {
+		f.read((char*)&temp, sizeof(Info));
+		if (i == roomNum-1)//由于我们输入的是第几个
+		{
+			continue;
+		}//
+	    tempf.write((char*)&temp, sizeof(Info));
+	}
+
+}
+
+
+
+//第三个函数：显示文件中的所有信息
+void showRoom(fstream& f) {
+	Info record = {" ",0,false,false," "," "};
+	f.clear();
+	f.seekg(0L, ios::beg);
+	while (f.read((char*)&record, sizeof(Info))) {
+		cout << "房间号为：" <<record.id<< endl;
+		cout << "房间价格为：" << record.price << endl;
+		if (record.booked == true) {
+			cout << "房间已被预订" << endl;
+		}
+		else {
+			cout << "房间未被预定" << endl;
+		}
+		if (record.checkIn == true) {
+			cout << "房间已被入住" <<endl;
+		}
+		else {
+			cout << "房间未被入住" <<endl;
+		}
+		cout << "房间住客姓名为：" << record.cname<< endl;
+		cout << "房间住客身份证号为：：" << record.cid << endl;
+	}
+}//不知道结构体重复贮存能否覆盖旧值？？
+
+
+//第四个函数：预定函数
+void bookRoom(fstream& f) {
+	char aimId[10];
+	cin >> aimId;
+	Info temp;
+	int n = 0;
+	bool found=false;//在这里加一个bool值用来检测是否找到对应房间
+	while (f.read((char*)&temp, sizeof(Info))) {
+		if (strcmp(temp.id, aimId) == 0) {//比较字符串用这个函数==0;不要直接等号相等
+			found = 1; 
+			break;		}
+		n++;//标记是文件中的第几条记录（第几个结构体）前
+	}
+	if (found == 0) {
+		cout << "未输入正确房间号" << endl;
+		return;//加一个return表示终止执行
+	}
+	if (temp.booked ==true) {
+		cout << "房间已经被预定，不能重复预订" << endl;
+		return;
+	}
+	
+		temp.booked = true;
+		f.seekp(n * sizeof(Info), ios::beg);
+		f.write((char*)&temp, sizeof(Info));
+		f.flush();//确保预定信息写入磁盘
+	
+}
+
+//第五个函数：入住函数
+void checkInRoom(fstream& f) {
+	char aimId[10];
+	cin >> aimId;
+	Info temp;
+	int n = 0;
+	bool found = false;
+	while (f.read((char*)&temp, sizeof(Info))) {
+		if (strcmp(temp.id, aimId) == 0) {//比较字符串用这个函数==0;不要直接等号相等
+			found = 1;
+			break;
+		}
+		n++;//标记是文件中的第几条记录（第几个结构体）前
+	}
+	if (found == 0) {
+		cout << "未输入正确房间号" << endl;
+		return;//加一个return表示终止执行
+	}
+	if (temp.checkIn==false) {
+		cout << "房间还未预定，需先预定才能入住" << endl;
+		return;
+	}
+	else {
+		temp.checkIn = true;
+		f.seekp(n * sizeof(Info), ios::beg);
+		f.write((char*)&temp, sizeof(Info));
+		f.flush();//确保预定信息写入磁盘
+	}
+}
+
+//第六个函数：查找房号
+void findRoom(fstream& f) {//按照姓名查找某个住客房号
+	char aimName[10];
+	cin >> aimName;
+	Info temp;
+	int n = 0;
+	bool found = false;
+	while (f.read((char*)&temp, sizeof(Info))) {
+		if (strcmp(temp.cname, aimName) == 0) {//比较字符串用这个函数==0;不要直接等号相等
+			found = 1;
+			break;
+		}
+		
+	}
+	if (found == 0) {
+		cout << "未找到相应住客对应房间" << endl;
+		return;
+	}
+	else {
+		cout << "对应住客房间号为：" << temp.id << endl;
+	}
+}
+
+//第七个函数：办理退房
+void checkOut(fstream& f) {//办理退房，删除某客房的入住记录
+	char aimId[10];
+	cin >> aimId;
+	Info temp;
+	int n = 0;
+	bool found = false;
+	while (f.read((char*)&temp, sizeof(Info))) {
+		if (strcmp(temp.id, aimId) == 0) {//比较字符串用这个函数==0;不要直接等号相等
+			found = 1;
+			break;
+		}
+		n++;//标记是文件中的第几条记录（第几个结构体）前
+	}
+	if (found == 0) {
+		cout << "未输入正确房间号" << endl;
+		return;//加一个return表示终止执行
+	}
+	if (temp.booked == false) {
+		cout << "房间还未预定，无法进行退房操作" << endl;
+		return;
+	}
+	else {
+		temp.booked == false;
+		temp.checkIn = false;
+		f.seekp(n * sizeof(Info), ios::beg);
+		f.write((char*)&temp, sizeof(Info));
+		f.flush();//确保预定信息写入磁盘
+	}
+}
+
+
+//第八个函数：统计各类房间数量
+void countRoom(fstream& f) {//统计文件中的各类房间总数
+	Info temp;
+	int numOf_checkIn = 0;
+	int numOf_book_but_not_checkIn = 0;
+	int numOf_empty_room = 0;
+	f.clear();
+	f.seekg(0L, ios::beg);
+	while (f.read((char*)&temp, sizeof(Info))) {
+		if (temp.booked == true || temp.checkIn == false) {
+			numOf_book_but_not_checkIn++;
+		}
+		else if (temp.booked == true || temp.checkIn == true) {
+			numOf_checkIn++;
+		}
+		else if (temp.booked == false || temp.checkIn == false) {
+			numOf_empty_room++;
+		}
+	}
+	cout << "目前已预定但未入住的房间有：" << numOf_book_but_not_checkIn << "间" << endl;
+	cout << "目前已预定且入住入住的房间有：" << numOf_checkIn << "间" << endl;
+	cout << "目前未预定的空房间有：" << numOf_empty_room << "间" << endl;
+}
+
+//先来写菜单
+int main() {
+	int choice = 0;
+	fstream f("infoRoom.txt", ios::in | ios::out | ios::binary);
+	if (f.fail()) { cout << "文件打开失败" << endl; exit(0); }
+	Info room[100];
+	int n = 0;
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 20; j++) {
+			sprintf(room[n].id, "%d", (i + 1) * 100 + (j + 1));//待会记得搞懂什么是sprintf()
+			room[n].price = 300;
+			room[n].booked = false;
+			room[n].checkIn = false;
+			sprintf(room[n].cname, "%s", "Unkown");
+			sprintf(room[n].cid, "%s", "Unkown");
+			
+			if (n >= 1) {
+				f.clear();
+				f.seekp(0L, ios::end);
+			}
+			f.write((char*)&room[n], sizeof(Info));
+			n++;
+		}
+	}
+	while (true) {
+		cout << "\n\t请选择功能：1.增加客房信息  2.删除客房信息 3.显示文件中的所有信息 4.预订客房 5.办理入住  6.查找住客房号 7.办理退房 8.统计房间信息 9.退出菜单\n";
+		cin >> choice;
+		switch (choice) {
+		case 1: addRoom(f); break;
+		case 2: {
+			deleteRoom(f, n);
+			f.close();
+			remove("infoRoom.txt");//删掉原文件
+			rename("temp.dat", "infoRoom.txt");//将新写成的文件更名为原文件
+			fstream f("temp.dat", ios::in | ios::out | ios::binary);
+			n = n - 1;
+			break;
+		}//在case里定义了新的变量，就必须用花括号将这个case包起来
+		case 3: showRoom(f); break;
+		case 4: bookRoom(f); break;
+		case 5: checkInRoom(f); break;
+		case 6: findRoom(f); break;
+		case 7: checkOut(f); break;
+		case 8: countRoom(f); break;
+		case 9: exit(0);
+		}
+	}
+	f.close();
+
+}
